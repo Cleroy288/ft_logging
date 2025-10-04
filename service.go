@@ -34,21 +34,29 @@ type Service struct {
 }
 
 // NewLogger creates a new Logger instance with optional context keys to extract.
-// Pass nil or empty slice if you don't need context value extraction.
+// contextKeys is a slice of context keys to extract and log (pass nil or empty slice if not needed).
+// Returns a Logger interface implementation.
 //
 // Example:
 //   logger := ft_logging.NewLogger([]string{"request_id", "user_id", "trace_id"})
 func NewLogger(contextKeys []string) Logger {
-	service := &Service{
+	var (
+		service *Service
+		keys    string
+		i       int
+		key     string
+	)
+
+	service = &Service{
 		contextKeys: contextKeys,
 	}
 
-	// Print initialization details
+	// print initialization details
 	if len(contextKeys) == 0 {
 		log.Printf("[ft_logging] Initialized with no context extraction")
 	} else {
-		keys := ""
-		for i, key := range contextKeys {
+		keys = ""
+		for i, key = range contextKeys {
 			if i > 0 {
 				keys += ", "
 			}
@@ -61,45 +69,72 @@ func NewLogger(contextKeys []string) Logger {
 }
 
 // Info logs an informational message in white.
+// ctx is the context for extracting context values.
+// message is the log message to display.
 func (s *Service) Info(ctx context.Context, message string) {
 	s.LogWithColor(ctx, colorWhite, "INFO", message)
 }
 
 // Success logs a success message in green.
+// ctx is the context for extracting context values.
+// message is the log message to display.
 func (s *Service) Success(ctx context.Context, message string) {
 	s.LogWithColor(ctx, colorGreen, "SUCCESS", message)
 }
 
 // Error logs an error message in red.
+// ctx is the context for extracting context values.
+// message is the log message to display.
 func (s *Service) Error(ctx context.Context, message string) {
 	s.LogWithColor(ctx, colorRed, "ERROR", message)
 }
 
 // LogWithColor formats and logs messages with color and context information.
-// It extracts context values based on the configured context keys.
+// ctx is the context for extracting context values.
+// color is the ANSI color code for the log level.
+// level is the log level name (INFO, SUCCESS, ERROR).
+// message is the log message to display.
 func (s *Service) LogWithColor(ctx context.Context, color, level, message string) {
-	// Extract context information
-	contextInfo := s.extractContextInfo(ctx)
-	contextPart := ""
+	var (
+		contextInfo  string
+		contextPart  string
+		formattedMsg string
+	)
+
+	// extract context information
+	contextInfo = s.extractContextInfo(ctx)
+	contextPart = ""
 	if contextInfo != "" {
 		contextPart = fmt.Sprintf(" {%s}", contextInfo)
 	}
 
-	formattedMsg := fmt.Sprintf("%s[%s]%s %s%s", color, level, colorReset, message, contextPart)
+	formattedMsg = fmt.Sprintf("%s[%s]%s %s%s", color, level, colorReset, message, contextPart)
 	log.Print(formattedMsg)
 }
 
 // extractContextInfo extracts context values using the configured keys.
+// ctx is the context to extract values from.
+// Returns a formatted string with all extracted context values.
 func (s *Service) extractContextInfo(ctx context.Context) string {
+	var (
+		parts  []string
+		key    string
+		value  any
+		result string
+		i      int
+		part   string
+	)
+
 	if ctx == nil || len(s.contextKeys) == 0 {
 		return ""
 	}
 
-	var parts []string
+	parts = []string{}
 
-	// Loop through configured context keys
-	for _, key := range s.contextKeys {
-		if value := ctx.Value(key); value != nil {
+	// loop through configured context keys
+	for _, key = range s.contextKeys {
+		value = ctx.Value(key)
+		if value != nil {
 			parts = append(parts, fmt.Sprintf("%s=%v", key, value))
 		}
 	}
@@ -108,8 +143,8 @@ func (s *Service) extractContextInfo(ctx context.Context) string {
 		return ""
 	}
 
-	result := ""
-	for i, part := range parts {
+	result = ""
+	for i, part = range parts {
 		if i > 0 {
 			result += ", "
 		}
