@@ -362,10 +362,6 @@ Perfect for:
 - Prototypes and MVPs
 - Services where simplicity matters
 
-## License
-
-MIT License - feel free to use in your projects!
-
 ## Author
 
 **Charles Leroy** - [@Cleroy288](https://github.com/Cleroy288)
